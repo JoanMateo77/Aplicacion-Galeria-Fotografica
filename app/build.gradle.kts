@@ -86,9 +86,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
     // Hilt
-    implementation("com.google.dagger:hilt-android:2.48")
-    ksp("com.google.dagger:hilt-compiler:2.48")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0") // ACTUALIZADO
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    ksp("com.google.dagger:hilt-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
@@ -101,13 +101,13 @@ dependencies {
     implementation("androidx.camera:camera-view:1.3.1")
 
     // Coil (Carga de imágenes)
-    implementation("io.coil-kt:coil-compose:2.6.0") // ACTUALIZADO
+    implementation("io.coil-kt:coil-compose:2.6.0")
 
     // Accompanist (Permisos)
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.7") // ACTUALIZADO
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // Testing - Unit
     testImplementation("junit:junit:4.13.2")
