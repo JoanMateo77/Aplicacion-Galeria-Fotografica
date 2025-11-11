@@ -1,0 +1,403 @@
+================================================================================
+ESTRUCTURA COMPLETA DEL PROYECTO: PhotoGallery (appfotografica)
+================================================================================
+
+INFORMACIÓN GENERAL DEL PROYECTO
+--------------------------------------------------------------------------------
+Nombre del Proyecto: appfotografica
+Package Name: com.proyecto.photogallery
+Tipo: Aplicación Android
+Lenguaje: Kotlin 100%
+Arquitectura: Clean Architecture
+UI Framework: Jetpack Compose
+Min SDK: 26
+Target SDK: 34
+Compile SDK: 34
+
+TECNOLOGÍAS PRINCIPALES
+--------------------------------------------------------------------------------
+- Jetpack Compose (UI)
+- Hilt (Inyección de Dependencias)
+- Room (Base de Datos Local)
+- CameraX (Cámara)
+- Coil (Carga de Imágenes)
+- Navigation Compose (Navegación)
+- Coroutines (Programación Asíncrona)
+- Accompanist Permissions (Gestión de Permisos)
+
+================================================================================
+ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS
+================================================================================
+
+appfotografica/
+│
+├── app/                                    [Módulo principal de la aplicación]
+│   │
+│   ├── build.gradle.kts                   [Configuración de dependencias y build del módulo app]
+│   ├── proguard-rules.pro                 [Reglas de ProGuard para ofuscación]
+│   │
+│   ├── build/                             [Carpeta de compilación (generada automáticamente)]
+│   │   ├── generated/                     [Archivos generados durante la compilación]
+│   │   ├── intermediates/                 [Archivos intermedios de compilación]
+│   │   ├── kotlin/                        [Archivos compilados de Kotlin]
+│   │   ├── outputs/                       [APKs y otros outputs de compilación]
+│   │   ├── reports/                        [Reportes de lint y análisis]
+│   │   └── test-results/                  [Resultados de pruebas]
+│   │
+│   └── src/                               [Código fuente del módulo]
+│       │
+│       ├── main/                          [Código fuente principal]
+│       │   │
+│       │   ├── AndroidManifest.xml        [Manifest de Android con permisos y configuración]
+│       │   │                               - Permisos: CAMERA, READ_MEDIA_IMAGES
+│       │   │                               - FileProvider para CameraX
+│       │   │                               - Configuración de la aplicación
+│       │   │
+│       │   ├── java/                      [Código fuente Kotlin/Java]
+│       │   │   └── com/
+│       │   │       └── proyecto/
+│       │   │           └── photogallery/
+│       │   │               │
+│       │   │               ├── MainActivity.kt                    [Actividad principal de la app]
+│       │   │               │
+│       │   │               ├── application/                      [Capa de aplicación]
+│       │   │               │   │
+│       │   │               │   ├── PhotoGalleryApplication.kt    [Clase Application con @HiltAndroidApp]
+│       │   │               │   │
+│       │   │               │   └── di/                           [Módulos de inyección de dependencias (Hilt)]
+│       │   │               │       ├── AppModule.kt              [Módulo principal de Hilt]
+│       │   │               │       ├── DatabaseModule.kt         [Provee PhotoDatabase y PhotoDao]
+│       │   │               │       ├── RepositoryModule.kt        [Vincula PhotoRepository con PhotoRepositoryImpl]
+│       │   │               │       └── UseCaseModule.kt           [Provee casos de uso]
+│       │   │               │
+│       │   │               ├── domain/                           [Capa de dominio - Lógica de negocio]
+│       │   │               │   │
+│       │   │               │   ├── model/                        [Modelos de datos del dominio]
+│       │   │               │   │   ├── Photo.kt                  [Modelo de dominio Photo]
+│       │   │               │   │   ├── PhotoSource.kt            [Enum para origen de la foto]
+│       │   │               │   │   └── exception/
+│       │   │               │   │       └── MaxPhotosException.kt [Excepción para límite de fotos]
+│       │   │               │   │
+│       │   │               │   ├── repository/                   [Interfaces de repositorios]
+│       │   │               │   │   └── PhotoRepository.kt        [Interfaz del repositorio de fotos]
+│       │   │               │   │
+│       │   │               │   └── usecase/                       [Casos de uso (Clean Architecture)]
+│       │   │               │       ├── AddPhotoUseCase.kt         [Caso de uso: Agregar foto]
+│       │   │               │       ├── DeletePhotoUseCase.kt     [Caso de uso: Eliminar foto]
+│       │   │               │       ├── GetPhotoCountUseCase.kt    [Caso de uso: Obtener conteo de fotos]
+│       │   │               │       └── GetPhotosUseCase.kt        [Caso de uso: Obtener todas las fotos]
+│       │   │               │
+│       │   │               ├── infrastructure/                    [Capa de infraestructura - Implementaciones]
+│       │   │               │   │
+│       │   │               │   ├── datasource/                    [Fuentes de datos]
+│       │   │               │   │   │
+│       │   │               │   │   ├── camera/                    [Fuente de datos de cámara]
+│       │   │               │   │   │   └── CameraDataSource.kt    [Implementación para tomar fotos con cámara]
+│       │   │               │   │   │
+│       │   │               │   │   ├── gallery/                   [Fuente de datos de galería]
+│       │   │               │   │   │   └── GalleryDataSource.kt    [Implementación para seleccionar de galería]
+│       │   │               │   │   │
+│       │   │               │   │   └── local/                     [Fuente de datos local (Room)]
+│       │   │               │   │       ├── PhotoDatabase.kt       [Base de datos Room]
+│       │   │               │   │       ├── LocalPhotoDataSource.kt [Implementación del data source local]
+│       │   │               │   │       ├── dao/
+│       │   │               │   │       │   └── PhotoDao.kt         [DAO para operaciones de base de datos]
+│       │   │               │   │       └── entity/
+│       │   │               │   │           └── PhotoEntity.kt      [Entidad de Room para Photo]
+│       │   │               │   │
+│       │   │               │   ├── mapper/                        [Convertidores entre modelos]
+│       │   │               │   │   └── PhotoMapper.kt             [Mapeo entre Photo (domain) y PhotoEntity (Room)]
+│       │   │               │   │
+│       │   │               │   └── repository/                    [Implementaciones de repositorios]
+│       │   │               │       └── PhotoRepositoryImpl.kt     [Implementación de PhotoRepository]
+│       │   │               │
+│       │   │               └── presentation/                       [Capa de presentación - UI]
+│       │   │                   │
+│       │   │                   ├── navigation/                     [Navegación de la app]
+│       │   │                   │   └── NavGraph.kt                [Gráfico de navegación con Compose Navigation]
+│       │   │                   │
+│       │   │                   ├── state/                         [Estados de UI]
+│       │   │                   │   └── PhotoUiState.kt            [Estado de UI para la galería de fotos]
+│       │   │                   │
+│       │   │                   ├── ui/                           [Componentes de UI (Jetpack Compose)]
+│       │   │                   │   │
+│       │   │                   │   ├── components/                 [Componentes reutilizables]
+│       │   │                   │   │   ├── CameraButton.kt        [Botón para abrir cámara]
+│       │   │                   │   │   ├── GalleryButton.kt       [Botón para abrir galería]
+│       │   │                   │   │   ├── EmptyState.kt          [Estado vacío cuando no hay fotos]
+│       │   │                   │   │   ├── PhotoCard.kt           [Tarjeta individual de foto]
+│       │   │                   │   │   └── PhotoGrid.kt           [Grid de fotos]
+│       │   │                   │   │
+│       │   │                   │   └── screen/                    [Pantallas de la aplicación]
+│       │   │                   │       ├── PhotoGalleryScreen.kt  [Pantalla principal de galería]
+│       │   │                   │       └── CameraScreen.kt        [Pantalla de cámara]
+│       │   │                   │
+│       │   │                   └── viewmodel/                     [ViewModels]
+│       │   │                       └── PhotoViewModel.kt           [ViewModel principal con lógica de UI]
+│       │   │
+│       │   └── res/                        [Recursos de Android]
+│       │       │
+│       │       ├── drawable/                [Drawables vectoriales]
+│       │       │   ├── ic_launcher_background.xml
+│       │       │   └── ic_launcher_foreground.xml
+│       │       │
+│       │       ├── mipmap-*/                [Iconos de la aplicación en diferentes densidades]
+│       │       │   ├── mipmap-anydpi-v26/
+│       │       │   │   ├── ic_launcher_round.xml
+│       │       │   │   └── ic_launcher.xml
+│       │       │   ├── mipmap-hdpi/
+│       │       │   │   ├── ic_launcher_round.webp
+│       │       │   │   └── ic_launcher.webp
+│       │       │   ├── mipmap-mdpi/
+│       │       │   │   ├── ic_launcher_round.webp
+│       │       │   │   └── ic_launcher.webp
+│       │       │   ├── mipmap-xhdpi/
+│       │       │   │   ├── ic_launcher_round.webp
+│       │       │   │   └── ic_launcher.webp
+│       │       │   ├── mipmap-xxhdpi/
+│       │       │   │   ├── ic_launcher_round.webp
+│       │       │   │   └── ic_launcher.webp
+│       │       │   └── mipmap-xxxhdpi/
+│       │       │       ├── ic_launcher_round.webp
+│       │       │       └── ic_launcher.webp
+│       │       │
+│       │       ├── values/                  [Valores de recursos]
+│       │       │   ├── colors.xml            [Colores de la aplicación]
+│       │       │   ├── strings.xml           [Cadenas de texto]
+│       │       │   └── themes.xml            [Temas de la aplicación]
+│       │       │
+│       │       └── xml/                     [Archivos XML de configuración]
+│       │           ├── backup_rules.xml      [Reglas de backup]
+│       │           ├── data_extraction_rules.xml [Reglas de extracción de datos]
+│       │           └── file_paths.xml        [Rutas para FileProvider]
+│       │
+│       ├── androidTest/                     [Pruebas de instrumentación (Android)]
+│       │   └── java/
+│       │       └── com/
+│       │           └── example/
+│       │               └── app_fotografica/
+│       │                   └── ExampleInstrumentedTest.kt        [Prueba de instrumentación de ejemplo]
+│       │
+│       └── test/                            [Pruebas unitarias]
+│           └── java/
+│               └── com/
+│                   └── example/
+│                       └── app_fotografica/
+│                           └── ExampleUnitTest.kt                [Prueba unitaria de ejemplo]
+│
+├── build/                                  [Carpeta de compilación del proyecto raíz]
+│   └── reports/                            [Reportes de análisis]
+│       └── problems/
+│           └── problems-report.html
+│
+├── gradle/                                 [Configuración de Gradle]
+│   ├── libs.versions.toml                  [Catálogo de versiones de dependencias]
+│   └── wrapper/                            [Gradle Wrapper]
+│       ├── gradle-wrapper.jar              [JAR del wrapper]
+│       └── gradle-wrapper.properties       [Propiedades del wrapper]
+│
+├── build.gradle.kts                        [Archivo de build del proyecto raíz]
+│                                            [Configuración de plugins comunes]
+│
+├── settings.gradle.kts                     [Configuración de módulos del proyecto]
+│                                            [Define el módulo :app]
+│
+├── gradle.properties                       [Propiedades de Gradle]
+│
+├── gradlew                                 [Script Gradle Wrapper (Unix/Linux/Mac)]
+│
+├── gradlew.bat                             [Script Gradle Wrapper (Windows)]
+│
+├── local.properties                        [Propiedades locales (ruta del SDK, etc.)]
+│
+└── README.md                               [Documentación del proyecto]
+                                            
+================================================================================
+RESUMEN DE ARCHIVOS POR CAPA
+================================================================================
+
+CAPA DE APLICACIÓN (application/)
+--------------------------------------------------------------------------------
+- PhotoGalleryApplication.kt          [Clase Application con Hilt]
+- di/AppModule.kt                     [Módulo principal de Hilt]
+- di/DatabaseModule.kt                [Módulo de base de datos]
+- di/RepositoryModule.kt              [Módulo de repositorios]
+- di/UseCaseModule.kt                 [Módulo de casos de uso]
+
+CAPA DE DOMINIO (domain/)
+--------------------------------------------------------------------------------
+Modelos:
+- model/Photo.kt                       [Modelo de dominio Photo]
+- model/PhotoSource.kt                 [Enum de origen de foto]
+- model/exception/MaxPhotosException.kt [Excepción de límite]
+
+Repositorios:
+- repository/PhotoRepository.kt         [Interfaz del repositorio]
+
+Casos de Uso:
+- usecase/AddPhotoUseCase.kt           [Agregar foto]
+- usecase/DeletePhotoUseCase.kt        [Eliminar foto]
+- usecase/GetPhotoCountUseCase.kt      [Contar fotos]
+- usecase/GetPhotosUseCase.kt          [Obtener fotos]
+
+CAPA DE INFRAESTRUCTURA (infrastructure/)
+--------------------------------------------------------------------------------
+Data Sources:
+- datasource/camera/CameraDataSource.kt        [Cámara]
+- datasource/gallery/GalleryDataSource.kt      [Galería]
+- datasource/local/PhotoDatabase.kt            [Base de datos Room]
+- datasource/local/dao/PhotoDao.kt             [DAO de Room]
+- datasource/local/entity/PhotoEntity.kt       [Entidad de Room]
+- datasource/local/LocalPhotoDataSource.kt     [Data source local]
+
+Mappers:
+- mapper/PhotoMapper.kt                 [Mapeo domain <-> entity]
+
+Repositorios:
+- repository/PhotoRepositoryImpl.kt    [Implementación del repositorio]
+
+CAPA DE PRESENTACIÓN (presentation/)
+--------------------------------------------------------------------------------
+Navegación:
+- navigation/NavGraph.kt                [Gráfico de navegación]
+
+Estado:
+- state/PhotoUiState.kt                 [Estado de UI]
+
+UI Components:
+- ui/components/CameraButton.kt         [Botón cámara]
+- ui/components/GalleryButton.kt        [Botón galería]
+- ui/components/EmptyState.kt           [Estado vacío]
+- ui/components/PhotoCard.kt            [Tarjeta de foto]
+- ui/components/PhotoGrid.kt            [Grid de fotos]
+
+Pantallas:
+- ui/screen/PhotoGalleryScreen.kt       [Pantalla de galería]
+- ui/screen/CameraScreen.kt             [Pantalla de cámara]
+
+ViewModels:
+- viewmodel/PhotoViewModel.kt           [ViewModel principal]
+
+ARCHIVOS RAÍZ
+--------------------------------------------------------------------------------
+- MainActivity.kt                       [Actividad principal]
+
+================================================================================
+DEPENDENCIAS PRINCIPALES
+================================================================================
+
+Core Android:
+- androidx.core:core-ktx:1.12.0
+- androidx.lifecycle:lifecycle-runtime-ktx:2.7.0
+- androidx.activity:activity-compose:1.8.2
+
+Jetpack Compose:
+- androidx.compose:compose-bom:2024.02.00
+- androidx.compose.ui:ui
+- androidx.compose.material3:material3
+- androidx.compose.material:material-icons-extended
+
+ViewModel & State:
+- androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0
+- androidx.lifecycle:lifecycle-runtime-compose:2.7.0
+
+Coroutines:
+- kotlinx-coroutines-android:1.7.3
+- kotlinx-coroutines-core:1.7.3
+
+Hilt (DI):
+- com.google.dagger:hilt-android:2.48
+- androidx.hilt:hilt-navigation-compose:1.1.0
+
+Room (Database):
+- androidx.room:room-runtime:2.6.1
+- androidx.room:room-ktx:2.6.1
+
+CameraX:
+- androidx.camera:camera-camera2:1.3.1
+- androidx.camera:camera-lifecycle:1.3.1
+- androidx.camera:camera-view:1.3.1
+
+Otros:
+- io.coil-kt:coil-compose:2.5.0 (Carga de imágenes)
+- com.google.accompanist:accompanist-permissions:0.32.0 (Permisos)
+- androidx.navigation:navigation-compose:2.7.6 (Navegación)
+
+================================================================================
+PERMISOS DECLARADOS
+================================================================================
+
+- android.permission.CAMERA                    [Permiso de cámara]
+- android.permission.READ_EXTERNAL_STORAGE     [Lectura de almacenamiento (Android ≤12)]
+- android.permission.READ_MEDIA_IMAGES         [Lectura de imágenes (Android 13+)]
+
+================================================================================
+CONFIGURACIÓN DE BUILD
+================================================================================
+
+- Compile SDK: 34
+- Min SDK: 26
+- Target SDK: 34
+- Java Version: 17
+- Kotlin JVM Target: 17
+- Compose Compiler: 1.5.4
+
+================================================================================
+ESTRUCTURA DE PAQUETES
+================================================================================
+
+com.proyecto.photogallery
+├── application
+│   ├── di
+│   └── PhotoGalleryApplication
+├── domain
+│   ├── model
+│   │   └── exception
+│   ├── repository
+│   └── usecase
+├── infrastructure
+│   ├── datasource
+│   │   ├── camera
+│   │   ├── gallery
+│   │   └── local
+│   │       ├── dao
+│   │       └── entity
+│   ├── mapper
+│   └── repository
+├── presentation
+│   ├── navigation
+│   ├── state
+│   ├── ui
+│   │   ├── components
+│   │   └── screen
+│   └── viewmodel
+└── MainActivity
+
+================================================================================
+NOTAS IMPORTANTES
+================================================================================
+
+1. El proyecto sigue Clean Architecture con separación clara de capas:
+   - Domain: Lógica de negocio independiente de Android
+   - Infrastructure: Implementaciones concretas (Room, CameraX, etc.)
+   - Presentation: UI con Jetpack Compose
+   - Application: Configuración de Hilt
+
+2. Se utiliza Hilt para inyección de dependencias en todas las capas.
+
+3. Room se usa para persistencia local de fotos.
+
+4. CameraX se integra para funcionalidad de cámara.
+
+5. Accompanist Permissions está marcado como deprecated - considerar migración
+   a APIs nativas de permisos de Compose.
+
+6. La estructura de datos locales (Room) está organizada de forma limpia:
+   - dao/ contiene PhotoDao.kt (DAO de Room)
+   - entity/ contiene PhotoEntity.kt (Entidad de Room)
+   - Convención de nombres en singular para mantener consistencia
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
