@@ -1,4 +1,9 @@
 package com.proyecto.photogallery.domain.usecase
 
-class DeletePhotoUseCase {
+import com.proyecto.photogallery.domain.model.Photo
+import com.proyecto.photogallery.domain.repository.PhotoRepository
+import javax.inject.Inject
+
+class DeletePhotoUseCase @Inject constructor(private val repository: PhotoRepository) {
+    suspend operator fun invoke(photo: Photo) = repository.deletePhoto(photo)
 }

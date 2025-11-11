@@ -20,6 +20,11 @@ class PhotoRepositoryImpl @Inject constructor(
         photoDao.update(photoEntity)
     }
 
+    override suspend fun deletePhoto(photo: Photo) {
+        val photoEntity = PhotoMapper.toEntity(photo)
+        photoDao.delete(photoEntity)
+    }
+
     override suspend fun getAllPhotos(): List<Photo> {
         return photoDao.getAll().map { photoEntity -> PhotoMapper.toDomain(photoEntity) }
     }

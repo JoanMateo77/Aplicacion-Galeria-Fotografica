@@ -6,5 +6,6 @@ interface PhotoRepository {
     suspend fun getAllPhotos(): List<Photo>
     suspend fun insertPhoto(photo: Photo)
     suspend fun updatePhoto(photo: Photo)
+    suspend fun deletePhoto(photo: Photo)
     suspend fun deleteAllPhotos()
 }

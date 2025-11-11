@@ -1,6 +1,7 @@
 package com.proyecto.photogallery.infrastructure.datasource.local.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
@@ -14,6 +15,9 @@ interface PhotoDao {
 
     @Update
     suspend fun update(photoEntity: PhotoEntity)
+
+    @Delete
+    suspend fun delete(photoEntity: PhotoEntity)
 
     @Query("SELECT * FROM photos ORDER BY dateTaken DESC")
     suspend fun getAll(): List<PhotoEntity>
