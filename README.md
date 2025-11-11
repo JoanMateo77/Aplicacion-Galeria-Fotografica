@@ -1,15 +1,15 @@
-# Documentación de Arquitectura - Fase 1: Configuración del Proyecto
+# Documentación de Arquitectura - PhotoGallery
 
 ## 1. Visión General
 
-Este documento describe la arquitectura inicial de la aplicación **PhotoGallery**. El objetivo de esta primera fase ha sido establecer una base de proyecto sólida, escalable y mantenible, aplicando los principios de la Arquitectura Limpia (Clean Architecture).
+Este documento describe la arquitectura de la aplicación **PhotoGallery**. El objetivo del proyecto es establecer una base sólida, escalable y mantenible, aplicando los principios de la Arquitectura Limpia (Clean Architecture).
 
-## 2. Objetivos de la Fase 1
+## 2. Objetivos Alcanzados
 
 - Configurar un proyecto Android moderno con Jetpack Compose.
 - Implementar la inyección de dependencias con Hilt.
-- Configurar una base de datos local con Room.
-- Establecer una estructura de paquetes basada en capas.
+- Configurar y probar una base de datos local con Room.
+- Establecer una estructura de paquetes basada en capas (dominio, infraestructura, presentación).
 - Declarar los permisos necesarios y los proveedores de archivos para la funcionalidad de la cámara.
 
 ## 3. Patrón de Arquitectura
@@ -18,15 +18,15 @@ El proyecto sigue un diseño de **Arquitectura Limpia** con una clara separació
 
 - **`domain`**: Es el núcleo de la aplicación. No tiene dependencias de Android y contiene la lógica de negocio y los modelos de datos principales.
   - `model/Photo.kt`: Representa el objeto de negocio.
-  - `repository/PhotoRepository.kt`: Interfaz que define el contrato para las operaciones de datos, independientemente de dónde vengan.
+  - `repository/PhotoRepository.kt`: Interfaz que define el contrato para las operaciones de datos.
 
 - **`infrastructure`**: Contiene las implementaciones concretas de las interfaces del dominio y gestiona las fuentes de datos.
   - `datasource/local`: Componentes de Room (`PhotoDatabase`, `PhotoDao`, `PhotoEntity`).
-  - `repository/PhotoRepositoryImpl.kt`: Implementación del `PhotoRepository` que usa `PhotoDao` para interactuar con la base de datos.
-  - `mapper/PhotoMapper.kt`: Funciones de extensión para convertir entre el modelo de dominio (`Photo`) y la entidad de la base de datos (`PhotoEntity`).
+  - `repository/PhotoRepositoryImpl.kt`: Implementación del `PhotoRepository` que usa `PhotoDao`.
+  - `mapper/PhotoMapper.kt`: Convierte entre el modelo de dominio (`Photo`) y la entidad de la base de datos (`PhotoEntity`).
 
 - **`presentation`**: Es responsable de la interfaz de usuario (UI) y de la gestión del estado.
-  - `viewmodel/PhotoViewModel.kt`: Gestiona la lógica de la UI y se comunica con la capa de dominio a través del `PhotoRepository`.
+  - `viewmodel/PhotoViewModel.kt`: Gestiona la lógica de la UI y se comunica con la capa de dominio.
   - `MainActivity.kt`: Punto de entrada de la UI que observa el `ViewModel`.
 
 ## 4. Componentes y Tecnologías Clave
@@ -34,48 +34,43 @@ El proyecto sigue un diseño de **Arquitectura Limpia** con una clara separació
 - **Lenguaje:** 100% Kotlin.
 - **UI:** Jetpack Compose.
 - **Inyección de Dependencias (Hilt):**
-  - `@HiltAndroidApp` en `PhotoGalleryApplication` para inicializar Hilt.
-  - `@AndroidEntryPoint` en `MainActivity` para permitir la inyección.
-  - `@HiltViewModel` en `PhotoViewModel` para inyectar dependencias en el ViewModel.
-  - **Módulos de Hilt (`di`):**
-    - `DatabaseModule`: Provee la instancia de la base de datos (`PhotoDatabase`) y el DAO (`PhotoDao`).
-    - `RepositoryModule`: Vincula la interfaz `PhotoRepository` con su implementación `PhotoRepositoryImpl`.
-
+  - Módulos (`DatabaseModule`, `RepositoryModule`) para proveer y vincular dependencias.
 - **Base de Datos (Room):**
-  - Se utiliza para la persistencia de datos local. La configuración separa la entidad de la base de datos (`PhotoEntity`) del modelo de dominio (`Photo`), lo que permite que el dominio permanezca independiente de la fuente de datos.
-
+  - Se utiliza para la persistencia de datos local, con una clara separación entre la entidad (`PhotoEntity`) y el modelo de dominio (`Photo`).
 - **Carga de Imágenes (Coil):**
-  - Se ha integrado `io.coil-kt:coil-compose` para gestionar la carga y visualización asíncrona de imágenes. Es una librería moderna y eficiente, diseñada para Compose.
-
-- **Gestión de Permisos en Tiempo de Ejecución (Accompanist):**
-  - Se utiliza `com.google.accompanist:accompanist-permissions` para solicitar los permisos necesarios (cámara, almacenamiento) de una manera declarativa y compatible con Compose.
-  - **Nota importante:** Esta librería está obsoleta (deprecated). Se deberá planificar su migración a las APIs de permisos nativas de Jetpack Compose en futuras fases para garantizar la compatibilidad y el mantenimiento a largo plazo.
-
+  - `io.coil-kt:coil-compose` para la carga y visualización asíncrona de imágenes.
+- **Gestión de Permisos (Accompanist):**
+  - Se utiliza `com.google.accompanist:accompanist-permissions`. **Nota:** Esta librería está obsoleta y se deberá migrar a las APIs nativas de Jetpack Compose.
 - **Gestión de Configuración:**
-  - **Gradle (Kotlin DSL):** Se utiliza `build.gradle.kts` para una gestión de dependencias y configuración de compilación segura y tipada.
-  - **Permisos:** Se han declarado los permisos de `CAMERA` y `READ_MEDIA_IMAGES` en el `AndroidManifest.xml`.
-  - **FileProvider:** Configurado para permitir el almacenamiento seguro de imágenes tomadas con la cámara.
+  - **Gradle (Kotlin DSL):** Uso de `build.gradle.kts` para una gestión de dependencias tipada.
+  - **FileProvider:** Configurado para el almacenamiento seguro de imágenes.
 
 ## 5. Estructura de Paquetes
 
-La estructura de paquetes refleja la separación de capas:
-
 ```
 com.proyecto.photogallery/
-├── application/      # Clase Application de Android.
-├── di/               # Módulos de Hilt para inyección de dependencias.
+├── application/      # Clase Application de Android y DI.
 ├── domain/
-│   ├── model/        # Modelos de datos del negocio.
-│   └── repository/   # Interfaces de los repositorios.
+│   ├── model/
+│   └── repository/
 ├── infrastructure/
-│   ├── datasource/   # Fuentes de datos (Room, API remota, etc.).
-│   ├── mapper/       # Conversores entre modelos de datos.
-│   └── repository/   # Implementaciones de los repositorios.
+│   ├── datasource/
+│   ├── mapper/
+│   └── repository/
 └── presentation/
-    ├── viewmodel/    # ViewModels de la UI.
-    └── (futuro: ui/) # Componentes de Compose, pantallas, etc.
+    └── viewmodel/
 ```
 
-## 6. Conclusión de la Fase 1
+## 6. Pruebas (Testing)
 
-El proyecto cuenta ahora con una base arquitectónica robusta que facilita el desarrollo futuro. La separación de capas, junto con la inyección de dependencias, permite una alta cohesión, un bajo acoplamiento y una excelente capacidad de prueba.
+La calidad del código se asegura mediante tests unitarios que validan la capa de infraestructura de forma aislada.
+
+- **Ubicación:** Los tests residen en `app/src/test/`.
+- **Estrategia:** Se utilizan tests locales (ejecutados en la JVM) para una validación rápida y eficiente.
+- **Tecnologías:** Se usa una combinación de **JUnit4**, **Robolectric** (para simular el entorno Android) y una base de datos **Room en memoria** para garantizar que los tests son rápidos, repetibles y no dejan artefactos.
+
+Para una guía detallada sobre cómo configurar y ejecutar los tests, consulta el archivo **`TESTING.md`**.
+
+## 7. Conclusión
+
+El proyecto cuenta ahora con una base arquitectónica robusta y **verificada por tests**, que facilita el desarrollo futuro. La separación de capas, junto con la inyección de dependencias y una estrategia de pruebas sólida, permite una alta cohesión, un bajo acoplamiento y una excelente capacidad de prueba y mantenimiento.

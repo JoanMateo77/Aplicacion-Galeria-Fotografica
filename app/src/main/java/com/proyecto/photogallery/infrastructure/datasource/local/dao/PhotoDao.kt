@@ -9,8 +9,11 @@ import com.proyecto.photogallery.infrastructure.datasource.local.entity.PhotoEnt
 interface PhotoDao {
 
     @Insert
-    suspend fun insertPhoto(photo: PhotoEntity)
+    suspend fun insert(photoEntity: PhotoEntity)
 
     @Query("SELECT * FROM photos ORDER BY dateTaken DESC")
-    suspend fun getAllPhotos(): List<PhotoEntity>
+    suspend fun getAll(): List<PhotoEntity>
+
+    @Query("DELETE FROM photos")
+    suspend fun clearAll()
 }

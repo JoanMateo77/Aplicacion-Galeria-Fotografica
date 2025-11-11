@@ -17,13 +17,8 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext appContext: Context): PhotoDatabase {
-        return Room.databaseBuilder(
-            appContext,
-            PhotoDatabase::class.java,
-            "photo_database"
-        ).build()
-    }
+    fun provideDatabase(@ApplicationContext context: Context): PhotoDatabase =
+        Room.databaseBuilder(context, PhotoDatabase::class.java, "photo_db").build()
 
     @Provides
     fun providePhotoDao(database: PhotoDatabase): PhotoDao = database.photoDao()
