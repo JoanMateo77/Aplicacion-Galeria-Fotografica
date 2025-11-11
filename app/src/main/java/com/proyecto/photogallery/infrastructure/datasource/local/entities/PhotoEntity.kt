@@ -1,4 +1,4 @@
-package com.proyecto.photogallery.infrastructure.datasource.local.entity
+package com.proyecto.photogallery.infrastructure.datasource.local.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
