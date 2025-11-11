@@ -1,10 +1,18 @@
 package com.proyecto.photogallery.application.di
 
+import com.proyecto.photogallery.domain.repository.PhotoRepository
+import com.proyecto.photogallery.infrastructure.repository.PhotoRepositoryImpl
+import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object RepositoryModule {
+abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindPhotoRepository(impl: PhotoRepositoryImpl): PhotoRepository
 }
