@@ -1,6 +1,7 @@
 package com.proyecto.photogallery.infrastructure.mapper
 
 import com.proyecto.photogallery.domain.model.Photo
+import com.proyecto.photogallery.domain.model.PhotoSource
 import com.proyecto.photogallery.infrastructure.datasource.local.entity.PhotoEntity
 
 object PhotoMapper {
@@ -9,7 +10,7 @@ object PhotoMapper {
             id = photo.id,
             uri = photo.uri,
             dateTaken = photo.dateTaken,
-            source = "" // El modelo de dominio no tiene 'source', se deja vacío por ahora
+            source = photo.source.name
         )
     }
 
@@ -17,7 +18,13 @@ object PhotoMapper {
         return Photo(
             id = photoEntity.id,
             uri = photoEntity.uri,
-            dateTaken = photoEntity.dateTaken
+            dateTaken = photoEntity.dateTaken,
+            source = try {
+                PhotoSource.valueOf(photoEntity.source)
+            } catch (e: IllegalArgumentException) {
+                // Para datos antiguos que no tenían source, usar GALLERY como default
+                PhotoSource.GALLERY
+            }
         )
     }
 }

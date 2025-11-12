@@ -4,7 +4,6 @@ import android.Manifest
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,10 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,11 +25,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.proyecto.photogallery.domain.model.Photo
+import com.proyecto.photogallery.domain.model.PhotoSource
+import com.proyecto.photogallery.presentation.ui.components.CameraButton
+import com.proyecto.photogallery.presentation.ui.components.EmptyState
+import com.proyecto.photogallery.presentation.ui.components.GalleryButton
+import com.proyecto.photogallery.presentation.ui.components.PhotoGrid
 import com.proyecto.photogallery.presentation.utils.createImageFile
 import com.proyecto.photogallery.presentation.utils.getUri
 import com.proyecto.photogallery.presentation.viewmodel.PhotoViewModel
@@ -58,7 +57,8 @@ fun PhotoGalleryScreen(
             uri?.let {
                 val newPhoto = Photo(
                     uri = it.toString(),
-                    dateTaken = System.currentTimeMillis()
+                    dateTaken = System.currentTimeMillis(),
+                    source = PhotoSource.GALLERY
                 )
                 viewModel.addPhoto(newPhoto)
             }
@@ -72,7 +72,8 @@ fun PhotoGalleryScreen(
                 tempImageUri?.let {
                     val newPhoto = Photo(
                         uri = it.toString(),
-                        dateTaken = System.currentTimeMillis()
+                        dateTaken = System.currentTimeMillis(),
+                        source = PhotoSource.CAMERA
                     )
                     viewModel.addPhoto(newPhoto)
                 }
@@ -107,42 +108,34 @@ fun PhotoGalleryScreen(
         Spacer(Modifier.height(8.dp))
 
         if (photos.isEmpty()) {
-            Text("No hay fotos aún.", modifier = Modifier.weight(1f))
+            EmptyState(modifier = Modifier.weight(1f))
         } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
+            PhotoGrid(
+                photos = photos,
                 modifier = Modifier.weight(1f)
-            ) {
-                items(photos) { photo ->
-                    Image(
-                        painter = rememberAsyncImagePainter(photo.uri),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(120.dp)
-                            .padding(4.dp)
-                    )
-                }
-            }
+            )
         }
 
         Spacer(Modifier.height(16.dp))
 
         Row(horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button(onClick = {
-                if (cameraPermissionState.status.isGranted) {
-                    val imageFile = createImageFile(context)
-                    val imageUri = imageFile.getUri(context)
-                    tempImageUri = imageUri
-                    cameraLauncher.launch(imageUri)
-                } else {
-                    permissionLauncher.launch(Manifest.permission.CAMERA)
-                }
-            }) {
-                Text("Tomar Foto")
-            }
-            Button(onClick = { galleryLauncher.launch("image/*") }) {
-                Text("Seleccionar Foto")
-            }
+            CameraButton(
+                onClick = {
+                    if (cameraPermissionState.status.isGranted) {
+                        val imageFile = createImageFile(context)
+                        val imageUri = imageFile.getUri(context)
+                        tempImageUri = imageUri
+                        cameraLauncher.launch(imageUri)
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                },
+                enabled = photos.size < 3
+            )
+            GalleryButton(
+                onClick = { galleryLauncher.launch("image/*") },
+                enabled = photos.size < 3
+            )
             Button(onClick = {
                 if (photos.isNotEmpty()) viewModel.deletePhoto(photos.last())
             }) {

@@ -8,8 +8,8 @@ El objetivo es asegurar la fiabilidad y robustez de la aplicación a través de 
 
 La estrategia se centra en probar cada capa de la arquitectura de forma aislada:
 - **Capa de Infraestructura:** Se verifica que la base de datos (Room) y las implementaciones de los repositorios funcionan como se espera.
-- **Capa de Dominio:** (Futuro) Se probará la lógica de negocio pura en los casos de uso.
-- **Capa de Presentación:** (Futuro) Se probará el comportamiento de los ViewModels y su gestión del estado.
+- **Capa de Dominio:** Se prueba la lógica de negocio en los casos de uso mediante tests del ViewModel.
+- **Capa de Presentación:** Se prueba el comportamiento de los ViewModels y su gestión del estado usando repositorios mockeados.
 
 ## 2. Configuración del Entorno de Pruebas
 
@@ -53,11 +53,11 @@ android {
 
 ## 3. Estructura de los Tests
 
-Actualmente, la suite de tests cubre las partes más críticas de la capa de infraestructura.
+La suite de tests cubre las capas más críticas de la arquitectura: infraestructura, mapper y presentación.
 
 ### A. Test del Repositorio y DAO (`PhotoRepositoryTest.kt`)
 
-Este test es el más completo, ya que valida la interacción de varios componentes a la vez.
+Este test valida la interacción de varios componentes de la capa de infraestructura.
 
 - **Ubicación:** `app/src/test/java/com/proyecto/photogallery/PhotoRepositoryTest.kt`
 - **Runner:** Se anota con `@RunWith(AndroidJUnit4::class)` para que JUnit use el runner que permite a Robolectric funcionar.
@@ -74,10 +74,28 @@ Este test es el más completo, ya que valida la interacción de varios component
 Este es un test unitario puro que no necesita el entorno de Android (ni Robolectric).
 
 - **Ubicación:** `app/src/test/java/com/proyecto/photogallery/infrastructure/mapper/PhotoMapperTest.kt`
-- **Objetivo:** Asegurar que la "traducción" de datos entre el modelo de dominio (`Photo`) y la entidad de la base de datos (`PhotoEntity`) es correcta y no pierde información.
-- **Tests clave:**
-  - `toDomain convierte correctamente PhotoEntity a Photo`: Verifica que los campos se copian correctamente de la entidad al modelo de dominio.
-  - `toEntity convierte correctamente Photo a PhotoEntity`: Verifica la conversión en la dirección opuesta.
+- **Objetivo:** Asegurar que la conversión de datos entre el modelo de dominio (`Photo`) y la entidad de la base de datos (`PhotoEntity`) es correcta, incluyendo el manejo de `PhotoSource`.
+- **Tests implementados:**
+  - `toDomain convierte correctamente PhotoEntity a Photo`: Verifica que los campos se copian correctamente, incluyendo `PhotoSource.CAMERA`.
+  - `toDomain convierte correctamente PhotoEntity con source GALLERY`: Verifica la conversión con `PhotoSource.GALLERY`.
+  - `toDomain maneja correctamente source inválido usando default GALLERY`: Verifica que datos antiguos (sin source) usan `GALLERY` como default.
+  - `toEntity convierte correctamente Photo a PhotoEntity`: Verifica la conversión del modelo de dominio a entidad con `PhotoSource.CAMERA`.
+  - `toEntity convierte correctamente Photo con source GALLERY`: Verifica la conversión con `PhotoSource.GALLERY`.
+
+### C. Test del ViewModel (`PhotoViewModelTest.kt`)
+
+Este test valida el comportamiento de la capa de presentación usando repositorios mockeados.
+
+- **Ubicación:** `app/src/test/java/com/proyecto/photogallery/presentation/viewmodel/PhotoViewModelTest.kt`
+- **Runner:** No requiere AndroidJUnit4, es un test unitario puro.
+- **Objetivo:** Probar que el `PhotoViewModel` gestiona correctamente el estado, maneja las operaciones de negocio y captura excepciones del dominio.
+- **Mocking:** Usa `FakePhotoRepository` para simular el repositorio sin necesidad de Room o Android.
+- **Corrutinas:** Usa `StandardTestDispatcher` y `runTest` para controlar el tiempo de las corrutinas en los tests.
+- **Tests implementados:**
+  - `addPhoto - cuando se añaden 3 fotos, el conteo es 3`: Verifica que se pueden agregar hasta 3 fotos correctamente.
+  - `addPhoto - cuando se intenta añadir una cuarta foto, se muestra un error`: Verifica que `MaxPhotosException` se maneja correctamente y se muestra el mensaje de error.
+  - `deletePhoto - borra una foto correctamente`: Verifica que la eliminación de fotos funciona correctamente.
+- **Nota:** Todos los tests usan `PhotoSource` (CAMERA o GALLERY) en las fotos de prueba.
 
 ## 4. Cómo Ejecutar los Tests
 
@@ -105,7 +123,34 @@ Si quieres ejecutar solo un test específico (por ejemplo, el del Mapper):
 
 Android Studio ejecutará los tests y mostrará los resultados en una ventana dedicada.
 
-## 5. Próximos Pasos
+## 5. Cobertura de Tests
 
-- Añadir tests para los `ViewModel` usando `ViewModel` real y repositorios "mockeados" (falsos).
-- Crear tests de instrumentación (`androidTest`) para verificar flujos de UI completos en un emulador o dispositivo real.
+### Tests Implementados
+
+✅ **Infraestructura:**
+- `PhotoRepositoryTest`: Tests de Repository y DAO con Room en memoria.
+- `PhotoMapperTest`: Tests de conversión entre modelos de dominio y entidades, incluyendo `PhotoSource`.
+
+✅ **Presentación:**
+- `PhotoViewModelTest`: Tests de ViewModel con repositorios mockeados, validación de límite de fotos y manejo de excepciones.
+
+### Tests Futuros (Opcional)
+
+- Tests de instrumentación (`androidTest`) para verificar flujos de UI completos en un emulador o dispositivo real.
+- Tests de componentes UI individuales (CameraButton, PhotoCard, etc.).
+- Tests de integración end-to-end.
+
+## 6. Ejecución de Tests
+
+Todos los tests se pueden ejecutar con:
+
+```bash
+./gradlew test
+```
+
+Los tests pasan correctamente y validan:
+- ✅ Funcionalidad de Repository y DAO
+- ✅ Conversión correcta de `PhotoSource` en el Mapper
+- ✅ Validación de límite de 3 fotos en el UseCase
+- ✅ Manejo de `MaxPhotosException` en el ViewModel
+- ✅ Estado unificado (`PhotoUiState`) en el ViewModel

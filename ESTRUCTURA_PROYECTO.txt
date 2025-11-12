@@ -65,10 +65,8 @@ appfotografica/
 │       │   │               │   ├── PhotoGalleryApplication.kt    [Clase Application con @HiltAndroidApp]
 │       │   │               │   │
 │       │   │               │   └── di/                           [Módulos de inyección de dependencias (Hilt)]
-│       │   │               │       ├── AppModule.kt              [Módulo principal de Hilt]
 │       │   │               │       ├── DatabaseModule.kt         [Provee PhotoDatabase y PhotoDao]
-│       │   │               │       ├── RepositoryModule.kt        [Vincula PhotoRepository con PhotoRepositoryImpl]
-│       │   │               │       └── UseCaseModule.kt           [Provee casos de uso]
+│       │   │               │       └── RepositoryModule.kt        [Vincula PhotoRepository con PhotoRepositoryImpl]
 │       │   │               │
 │       │   │               ├── domain/                           [Capa de dominio - Lógica de negocio]
 │       │   │               │   │
@@ -91,15 +89,8 @@ appfotografica/
 │       │   │               │   │
 │       │   │               │   ├── datasource/                    [Fuentes de datos]
 │       │   │               │   │   │
-│       │   │               │   │   ├── camera/                    [Fuente de datos de cámara]
-│       │   │               │   │   │   └── CameraDataSource.kt    [Implementación para tomar fotos con cámara]
-│       │   │               │   │   │
-│       │   │               │   │   ├── gallery/                   [Fuente de datos de galería]
-│       │   │               │   │   │   └── GalleryDataSource.kt    [Implementación para seleccionar de galería]
-│       │   │               │   │   │
 │       │   │               │   │   └── local/                     [Fuente de datos local (Room)]
 │       │   │               │   │       ├── PhotoDatabase.kt       [Base de datos Room]
-│       │   │               │   │       ├── LocalPhotoDataSource.kt [Implementación del data source local]
 │       │   │               │   │       ├── dao/
 │       │   │               │   │       │   └── PhotoDao.kt         [DAO para operaciones de base de datos]
 │       │   │               │   │       └── entity/
@@ -129,8 +120,7 @@ appfotografica/
 │       │   │                   │   │   └── PhotoGrid.kt           [Grid de fotos]
 │       │   │                   │   │
 │       │   │                   │   └── screen/                    [Pantallas de la aplicación]
-│       │   │                   │       ├── PhotoGalleryScreen.kt  [Pantalla principal de galería]
-│       │   │                   │       └── CameraScreen.kt        [Pantalla de cámara]
+│       │   │                   │       └── PhotoGalleryScreen.kt  [Pantalla principal - usa componentes y establece PhotoSource]
 │       │   │                   │
 │       │   │                   └── viewmodel/                     [ViewModels]
 │       │   │                       └── PhotoViewModel.kt           [ViewModel principal con lógica de UI]
@@ -219,10 +209,8 @@ RESUMEN DE ARCHIVOS POR CAPA
 CAPA DE APLICACIÓN (application/)
 --------------------------------------------------------------------------------
 - PhotoGalleryApplication.kt          [Clase Application con Hilt]
-- di/AppModule.kt                     [Módulo principal de Hilt]
-- di/DatabaseModule.kt                [Módulo de base de datos]
-- di/RepositoryModule.kt              [Módulo de repositorios]
-- di/UseCaseModule.kt                 [Módulo de casos de uso]
+- di/DatabaseModule.kt                [Módulo de base de datos - PhotoDatabase, PhotoDao]
+- di/RepositoryModule.kt              [Módulo de repositorios - vincula PhotoRepository]
 
 CAPA DE DOMINIO (domain/)
 --------------------------------------------------------------------------------
@@ -242,13 +230,10 @@ Casos de Uso:
 
 CAPA DE INFRAESTRUCTURA (infrastructure/)
 --------------------------------------------------------------------------------
-Data Sources:
-- datasource/camera/CameraDataSource.kt        [Cámara]
-- datasource/gallery/GalleryDataSource.kt      [Galería]
+Base de Datos:
 - datasource/local/PhotoDatabase.kt            [Base de datos Room]
 - datasource/local/dao/PhotoDao.kt             [DAO de Room]
-- datasource/local/entity/PhotoEntity.kt       [Entidad de Room]
-- datasource/local/LocalPhotoDataSource.kt     [Data source local]
+- datasource/local/entity/PhotoEntity.kt       [Entidad de Room con campo source]
 
 Mappers:
 - mapper/PhotoMapper.kt                 [Mapeo domain <-> entity]
@@ -272,8 +257,7 @@ UI Components:
 - ui/components/PhotoGrid.kt            [Grid de fotos]
 
 Pantallas:
-- ui/screen/PhotoGalleryScreen.kt       [Pantalla de galería]
-- ui/screen/CameraScreen.kt             [Pantalla de cámara]
+- ui/screen/PhotoGalleryScreen.kt       [Pantalla principal - usa componentes y establece PhotoSource]
 
 ViewModels:
 - viewmodel/PhotoViewModel.kt           [ViewModel principal]
@@ -394,8 +378,16 @@ NOTAS IMPORTANTES
 
 6. La estructura de datos locales (Room) está organizada de forma limpia:
    - dao/ contiene PhotoDao.kt (DAO de Room)
-   - entity/ contiene PhotoEntity.kt (Entidad de Room)
+   - entity/ contiene PhotoEntity.kt (Entidad de Room con campo source)
+   - PhotoMapper maneja la conversión entre Photo (domain) y PhotoEntity, incluyendo PhotoSource
    - Convención de nombres en singular para mantener consistencia
+
+7. Mejoras de arquitectura implementadas:
+   - PhotoSource enum para tipado fuerte del origen de fotos
+   - Validación de límite de 3 fotos en AddPhotoUseCase (dominio)
+   - MaxPhotosException para manejo de errores de negocio
+   - PhotoUiState para estado unificado de la UI
+   - Componentes UI reutilizables implementados
 
 ================================================================================
 FIN DEL DOCUMENTO

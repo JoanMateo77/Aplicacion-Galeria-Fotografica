@@ -1,6 +1,7 @@
 package com.proyecto.photogallery.presentation.viewmodel
 
 import com.proyecto.photogallery.domain.model.Photo
+import com.proyecto.photogallery.domain.model.PhotoSource
 import com.proyecto.photogallery.domain.repository.FakePhotoRepository
 import com.proyecto.photogallery.domain.usecase.AddPhotoUseCase
 import com.proyecto.photogallery.domain.usecase.DeletePhotoUseCase
@@ -29,11 +30,11 @@ class PhotoViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         fakeRepository = FakePhotoRepository()
+        val getPhotoCountUseCase = GetPhotoCountUseCase(fakeRepository)
         viewModel = PhotoViewModel(
-            addPhotoUseCase = AddPhotoUseCase(fakeRepository),
+            addPhotoUseCase = AddPhotoUseCase(fakeRepository, getPhotoCountUseCase),
             deletePhotoUseCase = DeletePhotoUseCase(fakeRepository),
-            getPhotosUseCase = GetPhotosUseCase(fakeRepository),
-            getPhotoCountUseCase = GetPhotoCountUseCase(fakeRepository)
+            getPhotosUseCase = GetPhotosUseCase(fakeRepository)
         )
     }
 
@@ -45,9 +46,9 @@ class PhotoViewModelTest {
     @Test
     fun `addPhoto - cuando se añaden 3 fotos, el conteo es 3`() = runTest {
         // Given
-        val photo1 = Photo(id = 1, uri = "uri1", dateTaken = 1L)
-        val photo2 = Photo(id = 2, uri = "uri2", dateTaken = 2L)
-        val photo3 = Photo(id = 3, uri = "uri3", dateTaken = 3L)
+        val photo1 = Photo(id = 1, uri = "uri1", dateTaken = 1L, source = PhotoSource.CAMERA)
+        val photo2 = Photo(id = 2, uri = "uri2", dateTaken = 2L, source = PhotoSource.GALLERY)
+        val photo3 = Photo(id = 3, uri = "uri3", dateTaken = 3L, source = PhotoSource.CAMERA)
 
         // When
         viewModel.addPhoto(photo1)
@@ -63,12 +64,12 @@ class PhotoViewModelTest {
     fun `addPhoto - cuando se intenta añadir una cuarta foto, se muestra un error`() = runTest {
         // Given
         repeat(3) { i ->
-            viewModel.addPhoto(Photo(id = i, uri = "uri$i", dateTaken = i.toLong()))
+            viewModel.addPhoto(Photo(id = i, uri = "uri$i", dateTaken = i.toLong(), source = PhotoSource.CAMERA))
         }
         testDispatcher.scheduler.advanceUntilIdle()
 
         // When
-        val fourthPhoto = Photo(id = 4, uri = "uri4", dateTaken = 4L)
+        val fourthPhoto = Photo(id = 4, uri = "uri4", dateTaken = 4L, source = PhotoSource.GALLERY)
         viewModel.addPhoto(fourthPhoto)
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -81,7 +82,7 @@ class PhotoViewModelTest {
     @Test
     fun `deletePhoto - borra una foto correctamente`() = runTest {
         // Given
-        val photo = Photo(id = 1, uri = "uri1", dateTaken = 1L)
+        val photo = Photo(id = 1, uri = "uri1", dateTaken = 1L, source = PhotoSource.CAMERA)
         viewModel.addPhoto(photo)
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, viewModel.photos.value.size)
