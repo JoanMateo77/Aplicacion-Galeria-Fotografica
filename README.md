@@ -107,6 +107,20 @@ En esta fase se consolidó y verificó la configuración completa de Hilt en el 
 -   **Actualización de Dependencias:** Se actualizaron las dependencias de Hilt a la última versión estable (`2.51.1`) y se confirmó el uso del compilador KSP para un mejor rendimiento.
 -   **Validación Final:** Se ejecutó una compilación limpia (`clean build`), demostrando que Hilt puede resolver y proveer correctamente todo el árbol de dependencias de la aplicación sin errores.
 
-## 9. Conclusión Final
+## 9. Fase 5: Implementación y Verificación de Funcionalidades
 
-El proyecto ha alcanzado una etapa de madurez arquitectónica. Todas las capas están definidas, implementadas y conectadas a través de Hilt. La base de código, verificada por tests unitarios, es robusta, escalable y está lista para la implementación de las funcionalidades finales, como la integración con la cámara y la galería.
+En la fase final del desarrollo inicial, se implementaron las funcionalidades interactivas y se solucionaron los problemas surgidos durante las pruebas.
+
+-   **Implementación de Cámara y Galería:**
+    -   Se utilizó `rememberLauncherForActivityResult` con los contratos `GetContent` y `TakePicture` para manejar la selección de imágenes y la captura con la cámara.
+    -   Se implementó la solicitud de permisos de cámara en tiempo de ejecución.
+    -   Se configuró el `FileProvider` para generar URIs seguros para la cámara, asegurando la compatibilidad con las versiones modernas de Android.
+
+-   **Depuración y Corrección de Errores:**
+    -   **Build:** Se resolvió un error de compilación (`SDK XML version 4 was encountered`) actualizando la versión del **Android Gradle Plugin (AGP)** a `8.4.1` y la **versión de Gradle** a `8.7`.
+    -   **Layout de Compose:** Se solucionó un bug visual donde los botones de acción desaparecían. El problema, causado por un `Modifier.fillMaxSize()` en la `LazyVerticalGrid`, se resolvió reemplazándolo por `Modifier.weight(1f)`.
+    -   **Verificación Final:** Se confirmó que la aplicación es completamente funcional en un dispositivo físico, validando que el código es correcto y aislando los problemas de simulación de hardware del emulador.
+
+## 10. Conclusión Final
+
+El proyecto ha alcanzado una etapa de madurez arquitectónica y funcional. Todas las capas están definidas, implementadas y conectadas a través de Hilt. La aplicación es completamente funcional, permitiendo al usuario añadir fotos desde la cámara o la galería, verlas en una cuadrícula y eliminarlas. La base de código, verificada por tests unitarios y validada en un dispositivo real, es robusta, escalable y está lista para futuras expansiones.
