@@ -1,126 +1,101 @@
-# Documentación de Arquitectura - PhotoGallery
+# PhotoGallery: galería de fotos para Android
 
-## 1. Visión General
+Aplicación Android en Kotlin y Jetpack Compose que permite tomar fotos con la cámara o elegirlas de la galería del teléfono, guardarlas en una base de datos local y verlas en una cuadrícula. Es un proyecto de práctica de **Clean Architecture** con Hilt y Room, con pruebas unitarias en la JVM.
 
-Este documento describe la arquitectura de la aplicación **PhotoGallery**. El objetivo del proyecto es establecer una base 
-sólida, escalable y mantenible, aplicando los principios de la Arquitectura Limpia (Clean Architecture).
+## Qué hace
 
-## 2. Objetivos Alcanzados (Fase 1 y 2)
+- **Tomar foto**: pide el permiso de cámara en tiempo de ejecución, crea un archivo temporal y abre la cámara del sistema (`ActivityResultContracts.TakePicture`) con un URI seguro generado por `FileProvider`.
+- **Seleccionar foto**: abre el selector de imágenes del sistema (`ActivityResultContracts.GetContent`).
+- **Ver la galería**: muestra las fotos guardadas en una cuadrícula de 3 columnas (`LazyVerticalGrid`), cargadas con Coil.
+- **Eliminar la última foto** de la cuadrícula.
+- **Límite de 3 fotos**: al intentar agregar una cuarta, la pantalla muestra un mensaje de error.
 
-- Configurar un proyecto Android moderno con Jetpack Compose.
-- Implementar la inyección de dependencias con Hilt.
-- Configurar y probar una base de datos local con Room.
-- Establecer una estructura de paquetes basada en capas (dominio, infraestructura, presentación).
-- Declarar los permisos necesarios y los proveedores de archivos para la funcionalidad de la cámara.
+Todo ocurre en una sola pantalla (`PhotoGalleryScreen`). Room guarda el URI de cada foto, no una copia de la imagen.
 
-## 3. Patrón de Arquitectura
+## Stack
 
-El proyecto sigue un diseño de **Arquitectura Limpia** con una clara separación de responsabilidades entre las siguientes capas:
+| Área | Tecnología | Versión |
+|---|---|---|
+| Lenguaje | Kotlin (JVM 17) | 1.9.20 |
+| Build | Android Gradle Plugin / Gradle | 8.4.1 / 8.7 |
+| SDK | minSdk / targetSdk / compileSdk | 26 / 34 / 34 |
+| UI | Jetpack Compose (BOM) + Material 3 | 2024.02.00 |
+| Navegación | Navigation Compose | 2.7.7 |
+| Inyección de dependencias | Hilt (con KSP) | 2.51.1 |
+| Persistencia | Room | 2.6.1 |
+| Imágenes | Coil | 2.6.0 |
+| Permisos | Accompanist Permissions | 0.32.0 |
+| Pruebas | JUnit 4 / Robolectric / kotlinx-coroutines-test | 4.13.2 / 4.12.1 / 1.7.3 |
 
-- **`domain`**: Es el núcleo de la aplicación. No tiene dependencias de Android y contiene la lógica de negocio 
-  y los modelos de datos principales.
-  - `model/Photo.kt`: Representa el objeto de negocio.
-  - `repository/PhotoRepository.kt`: Interfaz que define el contrato para las operaciones de datos.
-  - `usecase/`: Clases que contienen la lógica de negocio específica.
+Las versiones salen de `build.gradle.kts` y `app/build.gradle.kts`.
 
-- **`infrastructure`**: Contiene las implementaciones concretas de las interfaces del dominio y gestiona las fuentes de datos.
-  - `datasource/local`: Componentes de Room (`PhotoDatabase`, `PhotoDao`, `PhotoEntity`).
-  - `repository/PhotoRepositoryImpl.kt`: Implementación del `PhotoRepository` que usa `PhotoDao`.
-  - `mapper/PhotoMapper.kt`: Convierte entre el modelo de dominio (`Photo`) y la entidad de la base de datos (`PhotoEntity`).
+## Arquitectura
 
-- **`presentation`**: Es responsable de la interfaz de usuario (UI) y de la gestión del estado.
-  - `viewmodel/PhotoViewModel.kt`: Gestiona la lógica de la UI y se comunica con la capa de dominio.
-  - `MainActivity.kt`: Punto de entrada de la UI que observa el `ViewModel`.
-  - `ui/screen/`: Componentes y pantallas de Compose.
-  - `navigation/`: El grafo de navegación de la app.
-
-## 4. Componentes y Tecnologías Clave
-
-- **Lenguaje:** 100% Kotlin.
-- **UI:** Jetpack Compose.
-- **Inyección de Dependencias (Hilt):** Gestiona las dependencias en toda la aplicación.
-- **Base de Datos (Room):** Para la persistencia de datos local.
-- **Asincronía:** Corrutinas de Kotlin.
-- **Navegación:** Navigation-Compose.
-- **Carga de Imágenes:** Coil.
-- **Pruebas:** JUnit4 y Robolectric (ver `TESTING.md` para más detalles).
-
-## 5. Estructura de Paquetes
+El código está en `app/src/main/java/com/proyecto/photogallery/`, separado en capas. El dominio no depende de Android ni de Room; la infraestructura implementa sus interfaces y Hilt las conecta.
 
 ```
 com.proyecto.photogallery/
-├── application/      # Clase Application de Android y DI.
-├── domain/
-│   ├── model/
-│   ├── usecase/
-│   └── repository/
-├── infrastructure/
-│   ├── datasource/
-│   ├── mapper/
-│   └── repository/
-└── presentation/
-    ├── viewmodel/
-    ├── ui/
-    └── navigation/
+├── application/           Clase Application (@HiltAndroidApp) y módulos de Hilt
+│   └── di/                DatabaseModule (Room), RepositoryModule (@Binds interfaz -> implementación)
+├── domain/                Núcleo sin dependencias de Android
+│   ├── model/             Photo (id, uri, fecha)
+│   ├── repository/        PhotoRepository: contrato de acceso a datos
+│   └── usecase/           AddPhoto, DeletePhoto, GetPhotos, GetPhotoCount
+├── infrastructure/        Implementaciones concretas
+│   ├── datasource/local/  PhotoDatabase, PhotoDao, PhotoEntity (Room)
+│   ├── mapper/            PhotoMapper: Photo <-> PhotoEntity
+│   └── repository/        PhotoRepositoryImpl: implementa PhotoRepository sobre el DAO
+└── presentation/          UI y estado
+    ├── viewmodel/         PhotoViewModel (@HiltViewModel), expone StateFlow
+    ├── ui/screen/         PhotoGalleryScreen (Compose)
+    ├── navigation/        NavGraph con NavHost
+    └── utils/             Archivo temporal y URI de FileProvider para la cámara
 ```
 
-## 6. Pruebas (Testing)
+Flujo de una foto nueva: `PhotoGalleryScreen` -> `PhotoViewModel.addPhoto` -> `GetPhotoCountUseCase` / `AddPhotoUseCase` -> `PhotoRepository` (interfaz) -> `PhotoRepositoryImpl` -> `PhotoMapper` -> `PhotoDao` (Room).
 
-La calidad del código se asegura mediante tests unitarios que validan la capa de infraestructura de forma aislada.
+## Cómo ejecutarlo
 
-- **Ubicación:** Los tests residen en `app/src/test/`.
-- **Estrategia:** Se utilizan tests locales (ejecutados en la JVM) para una validación rápida y eficiente.
-- **Tecnologías:** Se usa una combinación de **JUnit4**, **Robolectric** (para simular el entorno Android) 
-- y una base de datos **Room en memoria** para garantizar que los tests son rápidos, repetibles y no dejan artefactos.
+Requisitos: Android Studio con JDK 17 y un dispositivo o emulador con Android 8.0 (API 26) o superior. Para probar la cámara conviene un dispositivo físico.
 
-Para una guía detallada sobre cómo configurar y ejecutar los tests, consulta el archivo **`TESTING.md`**.
+1. Clona el repositorio y ábrelo en Android Studio (**File > Open**). Gradle descarga las dependencias al sincronizar.
+2. Ejecuta la configuración `app` (**Run**).
 
-## 7. Fase 3: Detalles Técnicos de la Capa de Presentación
+Desde la terminal:
 
-Esta fase se centró en construir la interfaz de usuario y conectarla con la lógica de negocio. A continuación, se detallan los componentes técnicos clave implementados:
+```bash
+./gradlew assembleDebug     # genera app/build/outputs/apk/debug/app-debug.apk
+./gradlew installDebug      # instala en el dispositivo conectado
+./gradlew test              # pruebas unitarias en la JVM
+```
 
--   **Introducción de Casos de Uso (Use Cases):**
-    -   Se ha creado una nueva capa en `domain/usecase` para una mejor adherencia a los principios de la Arquitectura Limpia.
-    -   Cada caso de uso (ej. `AddPhotoUseCase`) tiene una única responsabilidad y se inyecta en el ViewModel usando el constructor y la anotación `@Inject`. Esto facilita las pruebas y la reutilización de la lógica de negocio.
+## Pruebas
 
--   **Implementación del `PhotoViewModel`:**
-    -   Se anota la clase con `@HiltViewModel` para permitir que Hilt gestione su ciclo de vida y le inyecte dependencias (los casos de uso).
-    -   El estado de la UI se gestiona con `MutableStateFlow` y se expone a la UI como un `StateFlow` inmutable, siguiendo el patrón de diseño **UDF (Unidirectional Data Flow)**.
-    -   Todas las operaciones que interactúan con el dominio se ejecutan dentro de un `viewModelScope.launch`, asegurando que se realicen en un hilo secundario y se cancelen automáticamente si el ViewModel se destruye.
+Las pruebas están en `app/src/test/` y corren en la JVM, sin emulador:
 
--   **Construcción de la UI con Jetpack Compose:**
-    -   Se crea el composable `PhotoGalleryScreen`, que obtiene una instancia del `PhotoViewModel` a través de la función `hiltViewModel()`.
-    -   El estado del `ViewModel` se consume en la UI de forma reactiva utilizando `collectAsState()`, lo que provoca recomposiciones automáticas cuando el `StateFlow` emite un nuevo valor.
-    -   Para mostrar la lista de imágenes de forma eficiente, se utiliza una `LazyVerticalGrid`.
-    -   Las imágenes se cargan de forma asíncrona desde su URI utilizando la función `rememberAsyncImagePainter` de la librería Coil.
+- `PhotoRepositoryTest`: inserta, lee y borra con una base Room en memoria (Robolectric).
+- `PhotoMapperTest`: conversión entre `Photo` y `PhotoEntity` en ambos sentidos.
+- `PhotoViewModelTest`: agregar y eliminar fotos, y el error al superar el límite de 3, con un `FakePhotoRepository`.
 
--   **Navegación con Navigation-Compose:**
-    -   Se ha creado un `NavGraph` centralizado que define las rutas de la aplicación.
-    -   Se utiliza un `NavHost` para gestionar las transiciones entre los diferentes composables de pantalla.
-    -   `MainActivity` se anota con `@AndroidEntryPoint` y se convierte en el contenedor del `NavGraph`, iniciando el flujo de la UI.
+La configuración del entorno de pruebas se explica en [TESTING.md](TESTING.md).
 
-## 8. Fase 4: Verificación de la Inyección de Dependencias
+## Decisiones técnicas
 
-En esta fase se consolidó y verificó la configuración completa de Hilt en el proyecto.
+- **Casos de uso de una sola responsabilidad** inyectados en el ViewModel: la UI no conoce el repositorio y cada operación se prueba por separado.
+- **Interfaz de repositorio en el dominio y `@Binds` en Hilt**: cambiar Room por otra fuente de datos solo toca la capa de infraestructura.
+- **Mapper explícito entre modelo de dominio y entidad de Room**: las anotaciones de persistencia no llegan al dominio.
+- **Contratos de Activity Result y `FileProvider`** para cámara y galería, en lugar de una cámara propia: menos código y compatible con versiones recientes de Android.
 
--   **Verificación de Componentes:** Se confirmó que todos los puntos de entrada (`PhotoGalleryApplication`, `MainActivity`) y las clases inyectadas (`PhotoViewModel`, Casos de Uso) están correctamente anotados.
--   **Actualización de Dependencias:** Se actualizaron las dependencias de Hilt a la última versión estable (`2.51.1`) y se confirmó el uso del compilador KSP para un mejor rendimiento.
--   **Validación Final:** Se ejecutó una compilación limpia (`clean build`), demostrando que Hilt puede resolver y proveer correctamente todo el árbol de dependencias de la aplicación sin errores.
+## Estado
 
-## 9. Fase 5: Implementación y Verificación de Funcionalidades
+Proyecto académico funcional en su flujo principal (tomar, seleccionar, ver y eliminar fotos). Partes que siguen a medias:
 
-En la fase final del desarrollo inicial, se implementaron las funcionalidades interactivas y se solucionaron los problemas surgidos durante las pruebas.
+- Hay clases creadas como estructura y aún vacías: `CameraDataSource`, `GalleryDataSource`, `LocalPhotoDataSource`, `CameraScreen`, los componentes de `ui/components/`, `PhotoSource`, `PhotoUiState`, `AppModule` y `UseCaseModule`.
+- El límite de 3 fotos vive en el ViewModel; `MaxPhotosException` existe pero aún no se usa en el dominio.
+- El campo `source` (cámara o galería) de `PhotoEntity` se guarda vacío porque el modelo de dominio todavía no lo tiene.
+- Las fotos elegidas de la galería se guardan por URI sin pedir permiso persistente, así que pueden dejar de mostrarse al reiniciar la app.
+- Las dependencias de CameraX están declaradas pero no se usan, y `gradle/libs.versions.toml` es un archivo de plantilla que el build actual no lee.
 
--   **Implementación de Cámara y Galería:**
-    -   Se utilizó `rememberLauncherForActivityResult` con los contratos `GetContent` y `TakePicture` para manejar la selección de imágenes y la captura con la cámara.
-    -   Se implementó la solicitud de permisos de cámara en tiempo de ejecución.
-    -   Se configuró el `FileProvider` para generar URIs seguros para la cámara, asegurando la compatibilidad con las versiones modernas de Android.
+---
 
--   **Depuración y Corrección de Errores:**
-    -   **Build:** Se resolvió un error de compilación (`SDK XML version 4 was encountered`) actualizando la versión del **Android Gradle Plugin (AGP)** a `8.4.1` y la **versión de Gradle** a `8.7`.
-    -   **Layout de Compose:** Se solucionó un bug visual donde los botones de acción desaparecían. El problema, causado por un `Modifier.fillMaxSize()` en la `LazyVerticalGrid`, se resolvió reemplazándolo por `Modifier.weight(1f)`.
-    -   **Verificación Final:** Se confirmó que la aplicación es completamente funcional en un dispositivo físico, validando que el código es correcto y aislando los problemas de simulación de hardware del emulador.
-
-## 10. Conclusión Final
-
-El proyecto ha alcanzado una etapa de madurez arquitectónica y funcional. Todas las capas están definidas, implementadas y conectadas a través de Hilt. La aplicación es completamente funcional, permitiendo al usuario añadir fotos desde la cámara o la galería, verlas en una cuadrícula y eliminarlas. La base de código, verificada por tests unitarios y validada en un dispositivo real, es robusta, escalable y está lista para futuras expansiones.
+Hecho por [Joan Mateo Cardona](https://github.com/JoanMateo77).
